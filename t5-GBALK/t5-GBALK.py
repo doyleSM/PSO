@@ -19,7 +19,7 @@ def downloadComics():
 
 	currentComicNumber = getCurrentComicNumber()
 	url = (("http://xkcd.com/", "/info.0.json"))
-	last4ComicsNames = []
+	last4Comics = []
 	for i in range(0,4):
 		response = requests.get(url[0]+(str(currentComicNumber-i))+url[1], stream=True)
 		#print(url[0]+(str(currentComicNumber-i))+url[1])
@@ -27,8 +27,10 @@ def downloadComics():
 			response.raise_for_status()
 			load = (json.loads(response.text))
 			urlImage = (load['img'])
-			imageName = (load['title'])+'.png'
-			last4ComicsNames.append(str(currentComicNumber-i))
+			comicTitle = (load['title'])
+			comicDate = ((load['day'])+"-"+(load['month'])+"-"+(load['year']))
+			print(comicDate)
+			last4Comics.append(((str(currentComicNumber-i)), comicTitle, comicDate))
 			response = requests.get(urlImage, stream=True)
 
 			with open(directory+(str(currentComicNumber-i)), 'wb') as out_file:
@@ -37,45 +39,42 @@ def downloadComics():
 		except:
 			print("except")
 			pass
-	print(last4ComicsNames)
-	return last4ComicsNames
+	return last4Comics
 
 
-def removeOldComics(last4ComicsNames):
+def removeOldComics(last4Comics):
+	lastComicsNum =[]
+	for i in range(4):
+		lastComicsNum.append(last4Comics[i][0])
 	for filename in os.listdir(directory):
-		if (filename not in last4ComicsNames):
+		if (filename not in lastComicsNum):
 			os.unlink(directory+filename)
+			#print(filename)
+			#pass
 
 
-
-#def updateHtml(lastComicsNames):
-#	count = 0
-#	srcs = []
-#	file = 'index.html'
-#	p = re.compile(r'src=[^\s]+')
-#	with open(file,'r') as file:
-#		for line in file:
-#			m=p.search(line)
-#			if(m):
-#				url = "src=\"img/"+lastComicsNames[count]+"\""
-				#print(url)
-#				m2 = p.sub(url, line)
-#				#srcs.append(m.group())
-#				count =+1
-#				print(m2)
-			#else:
-#				print(line.replace(line, line), end='')
-def updateHtml(lastComicsNames):
+def updateHtml(lastComics):
+	lastComicsNum =[]
+	comicsTitles = []
+	for i in range(4):
+		lastComicsNum.append(last4Comics[i][0])
+		comicsTitles.append(last4Comics[i][1])
 	count = 0
-	p = re.compile(r'src=[^\s]+')
+	countTitle = 0
+	p1 = re.compile(r'src=[^\s]+')
+	p2 = re.compile(r"<h2>(.*?)<\/h2>")
 	o = open("output","a") #open for append
 	for line in open('index.html','r'):
-		m=p.search(line)
+		n=p2.search(line)
+		if(n):
+			url = "<h2>"+comicsTitles[count]+"</h2>"
+			n2 = p2.sub(url, line)
+			line = line.replace(line, n2)
+			countTitle += 1
+		m=p1.search(line)
 		if(m):
-			url = "src=\"img/"+lastComicsNames[count]+"\""
-			#print(url)
-			m2 = p.sub(url, line)
-			#print(m2)
+			url = "src=\"img/"+lastComicsNum[count]+"\""
+			m2 = p1.sub(url, line)
 			line = line.replace(line, m2)
 			count += 1
 		o.write(line)
@@ -85,10 +84,7 @@ def updateHtml(lastComicsNames):
 	os.rename('output', 'index.html')
 
 
-	
-
-
-last4ComicsNames = downloadComics()
-last4ComicsNames.sort(key=lambda i: i[1], reverse = True)
-removeOldComics(last4ComicsNames)
-updateHtml(last4ComicsNames)
+last4Comics = downloadComics()
+last4Comics.sort(key=lambda i: i[0], reverse = True)
+removeOldComics(last4Comics)
+updateHtml(last4Comics)
