@@ -49,34 +49,46 @@ def removeOldComics(last4Comics):
 	for filename in os.listdir(directory):
 		if (filename not in lastComicsNum):
 			os.unlink(directory+filename)
-			#print(filename)
-			#pass
+			
 
 
 def updateHtml(lastComics):
 	lastComicsNum =[]
 	comicsTitles = []
+	comicsDates = []
 	for i in range(4):
 		lastComicsNum.append(last4Comics[i][0])
 		comicsTitles.append(last4Comics[i][1])
+		comicsDates.append(last4Comics[i][2])
+	print(comicsDates)
 	count = 0
 	countTitle = 0
+	countDate = 0
 	p1 = re.compile(r'src=[^\s]+')
 	p2 = re.compile(r"<h2>(.*?)<\/h2>")
+	p3 = re.compile(r"<h4>(.*?)<\/h4>")
 	o = open("output","a") #open for append
 	for line in open('index.html','r'):
+		q = p3.search(line)
+		if(q):
+			url = "<h4> Data da publicacao: "+comicsDates[countDate]+"</h4>"
+			q2 = p3.sub(url, line)
+			line = line.replace(line, q2)
+			countDate +=1
 		n=p2.search(line)
 		if(n):
-			url = "<h2>"+comicsTitles[count]+"</h2>"
+			url = "<h2>"+comicsTitles[countTitle]+"</h2>"
 			n2 = p2.sub(url, line)
 			line = line.replace(line, n2)
 			countTitle += 1
+			print(countTitle)
 		m=p1.search(line)
 		if(m):
 			url = "src=\"img/"+lastComicsNum[count]+"\""
 			m2 = p1.sub(url, line)
 			line = line.replace(line, m2)
 			count += 1
+			print(count)
 		o.write(line)
 	o.seek(0,0)
 	o.close()
