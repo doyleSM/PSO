@@ -1,6 +1,12 @@
 import json, requests, sys, shutil, os, re
 directory = (os.getcwd()+"/img/")
 
+
+def verificaDiretorio():
+	if(not os.path.exists(os.getcwd()+"/img")):
+		os.mkdir((os.getcwd()+"/img"))  
+
+
 def getCurrentComicNumber():
 	url = "http://xkcd.com/info.0.json"   
 	response = requests.get(url)
@@ -111,6 +117,9 @@ def updateHtml(lastComics):
 	o.close()
 	
 
+
+
+verificaDiretorio()
 last4Comics = downloadComics()
 last4Comics.sort(key=lambda i: i[0], reverse = True)
 removeOldComics(last4Comics)
